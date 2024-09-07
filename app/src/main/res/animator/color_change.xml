@@ -1,0 +1,10 @@
+<!-- res/animator/color_change.xml -->
+<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:propertyName="textColor"
+    android:duration="1000"
+    android:repeatCount="infinite"
+    android:repeatMode="reverse"
+    android:valueFrom="@android:color/black"
+    android:valueTo="@android:color/darker_gray"
+    android:valueType="colorType"
+    />
