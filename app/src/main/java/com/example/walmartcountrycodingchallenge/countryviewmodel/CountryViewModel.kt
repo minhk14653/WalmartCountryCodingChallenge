@@ -18,6 +18,10 @@ class CountryViewModel(private val repository: CountryRepository =  CountryRepos
     private val _isLoading: MutableLiveData<Boolean> = MutableLiveData(false)
     val isLoading: LiveData<Boolean> get() = _isLoading
 
+    init {
+        getCountry()
+    }
+
     fun getCountry() {
         viewModelScope.launch(Dispatchers.IO) {
             repository.getCountry().collect {

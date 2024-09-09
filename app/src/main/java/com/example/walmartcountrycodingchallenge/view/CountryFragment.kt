@@ -10,8 +10,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.walmartcountrycodingchallenge.databinding.FragmentCountryBinding
+import androidx.recyclerview.widget.RecyclerView
 import com.example.walmartcountrycodingchallenge.countryviewmodel.CountryViewModel
+import com.example.walmartcountrycodingchallenge.databinding.FragmentCountryBinding
 import com.example.walmartcountrycodingchallenge.model.Country
 import com.example.walmartcountrycodingchallenge.util.State
 
@@ -23,6 +24,18 @@ class CountryFragment: Fragment() {
     private val countryViewModel by lazy {
         ViewModelProvider(this)[CountryViewModel::class.java]
     }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        val layoutManager: RecyclerView.LayoutManager? =  binding.recyclerView.layoutManager
+        layoutManager?.let {
+            if (layoutManager is LinearLayoutManager) {
+                val scrollPosition = layoutManager.findFirstVisibleItemPosition()
+                outState.putInt("scrollPosition", scrollPosition)
+            }
+        }
+
+    }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -30,6 +43,12 @@ class CountryFragment: Fragment() {
         binding = FragmentCountryBinding.inflate(inflater, container, false)
         return binding.root
     }
+
+    private fun setErrorViewState(visibility: Int) {
+        binding.retryButton.visibility = visibility
+        binding.errorText.visibility = visibility
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.recyclerView.adapter = CountryListAdapter()
@@ -40,6 +59,10 @@ class CountryFragment: Fragment() {
                 (binding.recyclerView.layoutManager as LinearLayoutManager).orientation
             )
         )
+        if (savedInstanceState != null) {
+            val scrollPosition = savedInstanceState.getInt("scrollPosition", 0)
+            binding.recyclerView.scrollToPosition(scrollPosition)
+        }
         binding.retryButton.setOnClickListener {
             countryViewModel.getCountry()
         }
@@ -52,19 +75,19 @@ class CountryFragment: Fragment() {
         countryViewModel.countryLiveData.observe(viewLifecycleOwner) { state ->
             when (state) {
                 is State.ERROR -> {
-                    binding.retryButton.visibility = VISIBLE
+                    setErrorViewState(VISIBLE)
+                    binding.errorText.text = state.exception.message
                 }
 
                 is State.LOADING -> {
-                    binding.retryButton.visibility = GONE
+                    setErrorViewState(GONE)
                 }
 
                 is State.SUCCESS<*> -> {
-                    binding.retryButton.visibility = GONE
+                    setErrorViewState(GONE)
                     (binding.recyclerView.adapter as CountryListAdapter).submitList(state.country as MutableList<Country>?)
                 }
             }
         }
-        countryViewModel.getCountry()
     }
 }
